@@ -5,11 +5,7 @@ local Default = {}
 local Tags = {"ReadOnly", "Deprecated", "Hidden", "NotScriptable"}
 
 local Ignored = {
-	Classes = {
-		GuiObject = {
-			"Font"
-		}
-	},
+	Classes = {},
 	Global = {
 		"Parent",
 		"BrickColor",
@@ -114,13 +110,21 @@ function GetDefaultProperties(Class)
 		
 		local Properties = GetPropertyList(Class)
 
-		local Instance = Instance.new(Class)
-		
+		local DefaultInstance
+    
+    local Source, Error = pcall(function()
+        DefaultInstance = Instance.new(Class)
+		end)
+    
+    if not Source then
+        return nil
+    end
+    
 		for _, Property in next, Properties do
-			DefaultProperties[Property] = Instance[Property]
+			DefaultProperties[Property] = DefaultInstance[Property]
 		end
 		
-		Instance:Destroy()
+		DefaultInstance:Destroy()
 		
 		Default[Class] = DefaultProperties
 	end
@@ -255,17 +259,11 @@ local function FormatProperty(Value)
 			return ("PhysicalProperties.new(%d, %d, %d, %d, %d)"):format(
 				Value.Density, Value.Friction, Value.Elasticity, Value.FrictionWeight, Value.ElasticityWeight
 			)
-		elseif typeof(Value) == "Random" then
-			return "<Random>"
 		elseif typeof(Value) == "Ray" then
 			return ("Ray.new(%s, %s)"):format(
 				FormatProperty(Value.Origin),
 				FormatProperty(Value.Direction)
 			)
-		elseif typeof(Value) == "RBXScriptConnection" then
-			return "<RBXScriptConnection>"
-		elseif typeof(Value) == "RBXScriptSignal" then
-			return "<RBXScriptSignal>"
 		elseif typeof(Value) == "Rect" then
 			return ("Rect.new(%d, %d, %d, %d)"):format(
 				Value.Min.X, Value.Min.Y, Value.Max.X, Value.Max.Y
@@ -305,8 +303,8 @@ local function FormatProperty(Value)
 			return ("Vector3int16.new(%d, %d, %d)"):format(Value.X, Value.Y, Value.Z)
 		elseif typeof(Value) == "DateTime" then
 			return ("DateTime.fromIsoDate(%q)"):format(Value:ToIsoDate())
-		else
-			return "<Roblox:" .. typeof(Value) .. ">"
+    elseif typeof(Value) == "Font" then
+      return "Font.new(\"" .. string.match(tostring(Value), "Family = (.+)\.json") .. ".json\")"
 		end
 	end
 	
@@ -317,7 +315,11 @@ local function Clutterify(Object, Indent, Comma)
 	local Indent = Indent or 0
 	local Data = {string.rep("\t", Indent), Object.ClassName, " ", "{\n"}
 
-	for Property, Default in GetDefaultProperties(Object.ClassName) do
+  local DefaultProperties = GetDefaultProperties(Object.ClassName)
+  
+  if DefaultProperties == nil then return "" end
+  
+	for Property, Default in DefaultProperties do
 		if Object[Property] ~= Default then
 			table.insert(Data, string.rep("\t", Indent + 1))
 			table.insert(Data, Property)
