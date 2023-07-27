@@ -1,4 +1,4 @@
-local Dump = loadstring(game:HttpGet("http://apidump.glitch.me/"))()
+getgenv().Dump = Dump or loadstring(game:HttpGet("http://apidump.glitch.me/"))()
 
 local Default = {}
 
