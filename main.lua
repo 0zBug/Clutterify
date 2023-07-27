@@ -332,7 +332,7 @@ local function Clutterify(Object, Indent)
 	end
 	
 	table.insert(Data, string.rep("\t", Indent))
-	table.insert(Data, "}\n")
+	table.insert(Data, "},\n")
 	
 	return table.concat(Data)
 end
