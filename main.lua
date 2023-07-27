@@ -316,7 +316,8 @@ local function Clutterify(Object, Indent, Comma)
 	local Data = {string.rep("\t", Indent), Object.ClassName, " ", "{\n"}
 
   local DefaultProperties = GetDefaultProperties(Object.ClassName)
-  
+  local PropertyCount = 0
+	
   if DefaultProperties == nil then return "" end
   
 	for Property, Default in DefaultProperties do
@@ -326,6 +327,7 @@ local function Clutterify(Object, Indent, Comma)
 			table.insert(Data, " = ")
 			table.insert(Data, FormatProperty(Object[Property]))
 			table.insert(Data, ",\n")
+			PropertyCount = PropertyCount + 1
 		end
 	end
 	
@@ -344,7 +346,7 @@ local function Clutterify(Object, Indent, Comma)
 	table.insert(Data, string.rep("\t", Indent))
 	table.insert(Data, "}")
     
-  if Comma then
+  if Comma and PropertyCount > 0 then
     table.insert(Data, ",\n")
   end
 	
