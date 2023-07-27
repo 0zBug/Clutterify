@@ -184,7 +184,7 @@ local function FormatProperty(Value)
 		elseif typeof(Value) == "CFrame" then
 			return ("CFrame.new(%s)"):format(table.concat({Value:GetComponents()}, ", "))
 		elseif typeof(Value) == "Color3" then
-			return ("Color3.new(%d, %d, %d)"):format(Value.r, Value.g, Value.b)
+			return ("Color3.fromRGB(%d, %d, %d)"):format(Value.r * 255, Value.g * 255, Value.b * 255)
 		elseif typeof(Value) == "ColorSequence" then
 			if #Value.Keypoints > 2 then
 				return ("ColorSequence.new(%s)"):format(FormatProperty(Value.Keypoints))
@@ -313,7 +313,7 @@ local function FormatProperty(Value)
 	return ""
 end
 
-local function Clutterify(Object, Indent)
+local function Clutterify(Object, Indent, Comma)
 	local Indent = Indent or 0
 	local Data = {string.rep("\t", Indent), Object.ClassName, " ", "{\n"}
 
@@ -327,12 +327,24 @@ local function Clutterify(Object, Indent)
 		end
 	end
 	
-	for _, Child in Object:GetChildren() do
-		table.insert(Data, Clutterify(Child, Indent + 1))
+  local Children = Object:GetChildren()
+  
+	for Index, Child in Children do
+		table.insert(Data, Clutterify(Child, Indent + 1, #Children ~= Index))
 	end
 	
+  if #Children == 0 then
+    table.remove(Data, #Data)
+  end
+    
+  table.insert(Data, "\n")
+  
 	table.insert(Data, string.rep("\t", Indent))
-	table.insert(Data, "},\n")
+	table.insert(Data, "}")
+    
+  if Comma then
+    table.insert(Data, ",\n")
+  end
 	
 	return table.concat(Data)
 end
