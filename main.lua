@@ -16,6 +16,7 @@ local Ignored = {
 
 local function FindClassEntry(Class)
 	local Found
+	
 	for Index, Value in Dump.Classes do
 		if Value.Name == Class then
 			Found = Dump.Classes[Index]
@@ -112,13 +113,13 @@ function GetDefaultProperties(Class)
 
 		local DefaultInstance
     
-    local Source, Error = pcall(function()
-        DefaultInstance = Instance.new(Class)
+	    local Source, Error = pcall(function()
+	        DefaultInstance = Instance.new(Class)
 		end)
-    
-    if not Source then
-        return nil
-    end
+	    
+	    if not Source then
+	        return nil
+	    end
     
 		for _, Property in next, Properties do
 			DefaultProperties[Property] = DefaultInstance[Property]
@@ -313,13 +314,13 @@ end
 
 local function Clutterify(Object, Indent, Comma)
 	local Indent = Indent or 0
-	local Data = {string.rep("\t", Indent), Object.ClassName, " ", "{\n"}
-
-  local DefaultProperties = GetDefaultProperties(Object.ClassName)
-  local PropertyCount = 0
+	local Data = {string.rep("\t", Indent), Object.ClassName, " ", "{", "\n"}
 	
-  if DefaultProperties == nil then return "" end
-  
+	local DefaultProperties = GetDefaultProperties(Object.ClassName)
+	local PropertyCount = 0
+	
+	if DefaultProperties == nil then return "" end
+	
 	for Property, Default in DefaultProperties do
 		if Object[Property] ~= Default then
 			table.insert(Data, string.rep("\t", Indent + 1))
@@ -327,28 +328,34 @@ local function Clutterify(Object, Indent, Comma)
 			table.insert(Data, " = ")
 			table.insert(Data, FormatProperty(Object[Property]))
 			table.insert(Data, ",\n")
+			
 			PropertyCount = PropertyCount + 1
 		end
 	end
 	
-  local Children = Object:GetChildren()
-  
+	local Children = Object:GetChildren()
+	
 	for Index, Child in Children do
 		table.insert(Data, Clutterify(Child, Indent + 1, #Children ~= Index))
 	end
 	
-  if #Children == 0 then
-    table.remove(Data, #Data)
-  end
-    
-  table.insert(Data, "\n")
-  
-	table.insert(Data, string.rep("\t", Indent))
+	if PropertyCount == 0 and #Children == 0 then
+		table.remove(Data, #Data)
+	end
+	
+	if #Children == 0 and PropertyCount > 0 then
+		table.remove(Data, #Data)
+	end
+	
+	if PropertyCount ~= 0 and #Children ~= 0 then
+		table.insert(Data, "\n" .. string.rep("\t", Indent))	
+	end
+	
 	table.insert(Data, "}")
-    
-  if Comma and PropertyCount > 0 then
-    table.insert(Data, ",\n")
-  end
+	
+	if Comma then
+		table.insert(Data, ",\n")
+	end
 	
 	return table.concat(Data)
 end
