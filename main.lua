@@ -347,7 +347,7 @@ local function Clutterify(Object, Indent, Comma)
 		table.remove(Data, #Data)
 	end
 	
-	if PropertyCount ~= 0 and #Children ~= 0 then
+	if PropertyCount ~= 0 or #Children ~= 0 then
 		table.insert(Data, "\n" .. string.rep("\t", Indent))	
 	end
 	
